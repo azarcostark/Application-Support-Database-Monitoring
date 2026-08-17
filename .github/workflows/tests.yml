@@ -16,6 +16,29 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: application_support
+        ports:
+          - 3306:3306
+
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: application_support
+
     steps:
 
       - name: Checkout repository
@@ -30,6 +53,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Initialize CI database
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot < database/ci_setup.sql
+
+      - name: Start Flask application
+        run: |
+          nohup python run.py > flask.log 2>&1 &
+          sleep 5
+
+      - name: Verify Flask application
+        run: |
+          curl --fail http://127.0.0.1:5000/health
 
       - name: Run automated tests
         run: |
