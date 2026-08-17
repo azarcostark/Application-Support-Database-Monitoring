@@ -101,3 +101,30 @@ def test_dashboard_incident_counts_are_consistent():
         incidents["critical"] +
         incidents["warning"]
     )
+
+def test_dashboard_contains_recent_incidents():
+
+    response = requests.get(
+        f"{BASE_URL}/dashboard"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert "recent_incidents" in data
+    assert isinstance(
+        data["recent_incidents"],
+        list
+    )
+
+    assert len(data["recent_incidents"]) <= 5
+
+    for incident in data["recent_incidents"]:
+        assert "incident_id" in incident
+        assert "severity" in incident
+        assert "area" in incident
+        assert "root_cause" in incident
+        assert "status" in incident
+
+        assert incident["status"] == "OPEN"

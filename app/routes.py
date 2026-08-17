@@ -26,7 +26,6 @@ def register_routes(app):
             "message": "Application is healthy"
         }), 200
 
-
     @app.route("/customers", methods=["GET"])
     def get_customers():
 
@@ -75,7 +74,6 @@ def register_routes(app):
                 and connection.is_connected()
             ):
                 connection.close()
-
 
     @app.route("/orders", methods=["GET"])
     def get_orders():
@@ -252,7 +250,6 @@ def register_routes(app):
             ):
                 connection.close()
 
-
     @app.route("/incidents", methods=["GET"])
     def get_incidents():
 
@@ -362,7 +359,6 @@ def register_routes(app):
                 "message": "Unable to retrieve incidents"
             }), 500
 
-
     @app.route("/incidents/summary", methods=["GET"])
     def get_incident_summary_api():
 
@@ -382,7 +378,6 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve incident summary"
             }), 500
-
 
     @app.route("/incidents/summary/areas", methods=["GET"])
     def get_incident_summary_by_area_api():
@@ -405,7 +400,6 @@ def register_routes(app):
                 "message": "Unable to retrieve incident area summary"
             }), 500
 
-
     @app.route("/incidents/statistics", methods=["GET"])
     def get_incident_statistics_api():
 
@@ -426,7 +420,6 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve incident statistics"
             }), 500
-
 
     @app.route("/incidents/history", methods=["GET"])
     def get_incident_history():
@@ -457,7 +450,6 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve incident history"
             }), 500
-
 
     @app.route(
         "/incidents/<int:incident_id>",
@@ -494,7 +486,6 @@ def register_routes(app):
                 "message": "Unable to retrieve incident"
             }), 500
 
-
     @app.route(
         "/incidents/<int:incident_id>/resolve",
         methods=["PATCH"]
@@ -521,7 +512,6 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to resolve incident"
             }), 500
-
 
     @app.route(
         "/incidents",
@@ -613,7 +603,6 @@ def register_routes(app):
                 "message": "Unable to create incident"
             }), 500
 
-
     @app.route("/dashboard", methods=["GET"])
     def dashboard():
 
@@ -648,6 +637,22 @@ def register_routes(app):
 
             summary = get_incident_summary()
 
+            recent_incidents = get_incidents_by_status(
+                "OPEN"
+            )[:5]
+
+            for incident in recent_incidents:
+
+                if incident["detected_at"] is not None:
+                    incident["detected_at"] = (
+                        incident["detected_at"].isoformat()
+                    )
+
+                if incident["resolved_at"] is not None:
+                    incident["resolved_at"] = (
+                        incident["resolved_at"].isoformat()
+                    )
+
             return jsonify({
                 "system_status": health_report["overall_status"],
                 "api": {
@@ -676,7 +681,8 @@ def register_routes(app):
                     "resolved": int(summary["resolved"] or 0),
                     "critical": int(summary["critical"] or 0),
                     "warning": int(summary["warning"] or 0)
-                }
+                },
+                "recent_incidents": recent_incidents
             }), 200
 
         except Exception:
@@ -686,7 +692,6 @@ def register_routes(app):
                     "Unable to retrieve dashboard information"
                 )
             }), 500
-
 
     @app.route("/dashboard/view", methods=["GET"])
     def dashboard_view():
@@ -722,6 +727,22 @@ def register_routes(app):
 
             summary = get_incident_summary()
 
+            recent_incidents = get_incidents_by_status(
+                "OPEN"
+            )[:5]
+
+            for incident in recent_incidents:
+
+                if incident["detected_at"] is not None:
+                    incident["detected_at"] = (
+                        incident["detected_at"].isoformat()
+                    )
+
+                if incident["resolved_at"] is not None:
+                    incident["resolved_at"] = (
+                        incident["resolved_at"].isoformat()
+                    )
+
             dashboard_data = {
                 "system_status": health_report["overall_status"],
                 "api": {
@@ -732,13 +753,13 @@ def register_routes(app):
                         - len(failed_endpoints)
                     ),
                     "slow_endpoints": len(slow_endpoints),
-                    "failed_endpoints": len(failed_endpoints)
+                    "failed_endpoints": len(failed_endpoints),
+                    "failed_endpoint_names": failed_endpoints,
+                    "slow_endpoint_names": slow_endpoints
                 },
                 "database": {
                     "status": database_result["status"],
-                    "response_time": (
-                        database_result["response_time"]
-                    ),
+                    "response_time": database_result["response_time"],
                     "query_ok": database_result["query_ok"],
                     "response_time_ok": (
                         database_result["response_time_ok"]
@@ -750,7 +771,8 @@ def register_routes(app):
                     "resolved": int(summary["resolved"] or 0),
                     "critical": int(summary["critical"] or 0),
                     "warning": int(summary["warning"] or 0)
-                }
+                },
+                "recent_incidents": recent_incidents
             }
 
             return render_template(
@@ -758,8 +780,8 @@ def register_routes(app):
                 dashboard=dashboard_data
             )
 
-        except Exception as error:
+        except Exception:
             return jsonify({
                 "status": "ERROR",
-                "message": str(error)
+                "message": "Unable to load dashboard"
             }), 500
