@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify, request, render_template
 
 from config.database import get_database_connection
 
@@ -12,9 +12,9 @@ from utils.incident_repository import (
     get_incident_by_id,
     resolve_incident
 )
-from monitoring.incident_store import (
-    get_local_open_incidents
-)
+
+from monitoring.incident_store import get_local_open_incidents
+from monitoring.health_monitor import run_full_health_check
 
 
 def register_routes(app):
@@ -26,8 +26,10 @@ def register_routes(app):
             "message": "Application is healthy"
         }), 200
 
+
     @app.route("/customers", methods=["GET"])
     def get_customers():
+
         connection = None
         cursor = None
 
@@ -74,8 +76,10 @@ def register_routes(app):
             ):
                 connection.close()
 
+
     @app.route("/orders", methods=["GET"])
     def get_orders():
+
         connection = None
         cursor = None
 
@@ -168,7 +172,9 @@ def register_routes(app):
             where_clause = ""
 
             if conditions:
-                where_clause = " WHERE " + " AND ".join(conditions)
+                where_clause = (
+                    " WHERE " + " AND ".join(conditions)
+                )
 
             connection = get_database_connection()
             cursor = connection.cursor(dictionary=True)
@@ -245,6 +251,7 @@ def register_routes(app):
                 and connection.is_connected()
             ):
                 connection.close()
+
 
     @app.route("/incidents", methods=["GET"])
     def get_incidents():
@@ -341,6 +348,7 @@ def register_routes(app):
         except Exception:
 
             if status == "OPEN":
+
                 local_incidents = get_local_open_incidents()
 
                 return jsonify({
@@ -353,6 +361,7 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve incidents"
             }), 500
+
 
     @app.route("/incidents/summary", methods=["GET"])
     def get_incident_summary_api():
@@ -374,6 +383,7 @@ def register_routes(app):
                 "message": "Unable to retrieve incident summary"
             }), 500
 
+
     @app.route("/incidents/summary/areas", methods=["GET"])
     def get_incident_summary_by_area_api():
 
@@ -394,7 +404,8 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve incident area summary"
             }), 500
-    
+
+
     @app.route("/incidents/statistics", methods=["GET"])
     def get_incident_statistics_api():
 
@@ -415,7 +426,8 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve incident statistics"
             }), 500
-        
+
+
     @app.route("/incidents/history", methods=["GET"])
     def get_incident_history():
 
@@ -445,6 +457,7 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve incident history"
             }), 500
+
 
     @app.route(
         "/incidents/<int:incident_id>",
@@ -481,6 +494,7 @@ def register_routes(app):
                 "message": "Unable to retrieve incident"
             }), 500
 
+
     @app.route(
         "/incidents/<int:incident_id>/resolve",
         methods=["PATCH"]
@@ -507,6 +521,7 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to resolve incident"
             }), 500
+
 
     @app.route(
         "/incidents",
@@ -596,4 +611,155 @@ def register_routes(app):
             return jsonify({
                 "status": "ERROR",
                 "message": "Unable to create incident"
+            }), 500
+
+
+    @app.route("/dashboard", methods=["GET"])
+    def dashboard():
+
+        try:
+            health_report = run_full_health_check()
+
+            api_results = health_report["api"]
+
+            failed_endpoints = [
+                result["endpoint"]
+                for result in api_results
+                if not result["status_ok"]
+            ]
+
+            slow_endpoints = [
+                result["endpoint"]
+                for result in api_results
+                if (
+                    result["status_ok"]
+                    and not result["response_time_ok"]
+                )
+            ]
+
+            if failed_endpoints:
+                api_status = "DOWN"
+            elif slow_endpoints:
+                api_status = "DEGRADED"
+            else:
+                api_status = "UP"
+
+            database_result = health_report["database"]
+
+            summary = get_incident_summary()
+
+            return jsonify({
+                "system_status": health_report["overall_status"],
+                "api": {
+                    "status": api_status,
+                    "total_endpoints": len(api_results),
+                    "healthy_endpoints": (
+                        len(api_results)
+                        - len(failed_endpoints)
+                    ),
+                    "slow_endpoints": len(slow_endpoints),
+                    "failed_endpoints": len(failed_endpoints),
+                    "failed_endpoint_names": failed_endpoints,
+                    "slow_endpoint_names": slow_endpoints
+                },
+                "database": {
+                    "status": database_result["status"],
+                    "response_time": database_result["response_time"],
+                    "query_ok": database_result["query_ok"],
+                    "response_time_ok": (
+                        database_result["response_time_ok"]
+                    )
+                },
+                "incidents": {
+                    "total": int(summary["total"] or 0),
+                    "open": int(summary["open"] or 0),
+                    "resolved": int(summary["resolved"] or 0),
+                    "critical": int(summary["critical"] or 0),
+                    "warning": int(summary["warning"] or 0)
+                }
+            }), 200
+
+        except Exception:
+            return jsonify({
+                "status": "ERROR",
+                "message": (
+                    "Unable to retrieve dashboard information"
+                )
+            }), 500
+
+
+    @app.route("/dashboard/view", methods=["GET"])
+    def dashboard_view():
+
+        try:
+            health_report = run_full_health_check()
+
+            api_results = health_report["api"]
+
+            failed_endpoints = [
+                result["endpoint"]
+                for result in api_results
+                if not result["status_ok"]
+            ]
+
+            slow_endpoints = [
+                result["endpoint"]
+                for result in api_results
+                if (
+                    result["status_ok"]
+                    and not result["response_time_ok"]
+                )
+            ]
+
+            if failed_endpoints:
+                api_status = "DOWN"
+            elif slow_endpoints:
+                api_status = "DEGRADED"
+            else:
+                api_status = "UP"
+
+            database_result = health_report["database"]
+
+            summary = get_incident_summary()
+
+            dashboard_data = {
+                "system_status": health_report["overall_status"],
+                "api": {
+                    "status": api_status,
+                    "total_endpoints": len(api_results),
+                    "healthy_endpoints": (
+                        len(api_results)
+                        - len(failed_endpoints)
+                    ),
+                    "slow_endpoints": len(slow_endpoints),
+                    "failed_endpoints": len(failed_endpoints)
+                },
+                "database": {
+                    "status": database_result["status"],
+                    "response_time": (
+                        database_result["response_time"]
+                    ),
+                    "query_ok": database_result["query_ok"],
+                    "response_time_ok": (
+                        database_result["response_time_ok"]
+                    )
+                },
+                "incidents": {
+                    "total": int(summary["total"] or 0),
+                    "open": int(summary["open"] or 0),
+                    "resolved": int(summary["resolved"] or 0),
+                    "critical": int(summary["critical"] or 0),
+                    "warning": int(summary["warning"] or 0)
+                }
+            }
+
+            return render_template(
+                "dashboard.html",
+                dashboard=dashboard_data
+            )
+
+        except Exception as error:
+            return jsonify({
+                "status": "ERROR",
+                "message": str(error)
             }), 500
