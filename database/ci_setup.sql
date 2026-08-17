@@ -6,6 +6,11 @@ DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS incidents;
 DROP TABLE IF EXISTS customers;
 
+
+-- ============================================================
+-- CUSTOMERS TABLE
+-- ============================================================
+
 CREATE TABLE customers (
     customer_id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
@@ -13,6 +18,11 @@ CREATE TABLE customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (customer_id)
 );
+
+
+-- ============================================================
+-- ORDERS TABLE
+-- ============================================================
 
 CREATE TABLE orders (
     order_id INT NOT NULL AUTO_INCREMENT,
@@ -30,6 +40,11 @@ CREATE TABLE orders (
         REFERENCES customers(customer_id)
 );
 
+
+-- ============================================================
+-- INCIDENTS TABLE
+-- ============================================================
+
 CREATE TABLE incidents (
     incident_id INT NOT NULL AUTO_INCREMENT,
     severity VARCHAR(20) NOT NULL,
@@ -42,13 +57,28 @@ CREATE TABLE incidents (
     PRIMARY KEY (incident_id)
 );
 
-INSERT INTO customers (name, email)
+
+-- ============================================================
+-- CUSTOMER TEST DATA
+-- ============================================================
+
+INSERT INTO customers (
+    name,
+    email
+)
 VALUES
     ('John Smith', 'john.smith@example.com'),
     ('Jane Doe', 'jane.doe@example.com'),
     ('Michael Brown', 'michael.brown@example.com'),
     ('Sarah Wilson', 'sarah.wilson@example.com'),
     ('David Miller', 'david.miller@example.com');
+
+
+-- ============================================================
+-- PENDING ORDERS
+-- 70 PENDING orders are created so pagination
+-- tests can verify page 2 exists.
+-- ============================================================
 
 INSERT INTO orders (
     customer_id,
@@ -93,6 +123,11 @@ FROM (
     SELECT 70
 ) AS numbers;
 
+
+-- ============================================================
+-- ADDITIONAL ORDER STATUS TEST DATA
+-- ============================================================
+
 INSERT INTO orders (
     customer_id,
     product,
@@ -103,6 +138,13 @@ VALUES
     (1, 'Completed Product 1', 125.00, 'COMPLETED'),
     (2, 'Completed Product 2', 225.00, 'COMPLETED'),
     (3, 'Cancelled Product', 75.00, 'CANCELLED');
+
+
+-- ============================================================
+-- INCIDENT TEST DATA
+-- 15 incidents are created because the API test
+-- requests incident ID 15.
+-- ============================================================
 
 INSERT INTO incidents (
     severity,
@@ -180,5 +222,40 @@ VALUES
         'TEST',
         'Previous test infrastructure failure.',
         'Test infrastructure was restored.',
+        'RESOLVED'
+    ),
+    (
+        'WARNING',
+        'DATABASE',
+        'Previous database performance warning.',
+        'Database performance returned to normal.',
+        'RESOLVED'
+    ),
+    (
+        'CRITICAL',
+        'DATABASE',
+        'Previous database outage.',
+        'Database service was restored.',
+        'RESOLVED'
+    ),
+    (
+        'WARNING',
+        'APPLICATION',
+        'Previous API latency warning.',
+        'API response time returned to normal.',
+        'RESOLVED'
+    ),
+    (
+        'CRITICAL',
+        'APPLICATION',
+        'Previous application failure.',
+        'Application service was restored.',
+        'RESOLVED'
+    ),
+    (
+        'WARNING',
+        'TEST',
+        'Previous automation warning.',
+        'Automation environment returned to normal.',
         'RESOLVED'
     );
