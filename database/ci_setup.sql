@@ -2,6 +2,7 @@ CREATE DATABASE IF NOT EXISTS application_support;
 
 USE application_support;
 
+DROP TABLE IF EXISTS alerts;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS incidents;
 DROP TABLE IF EXISTS customers;
@@ -57,6 +58,27 @@ CREATE TABLE incidents (
     PRIMARY KEY (incident_id)
 );
 
+-- ============================================================
+-- ALERTS TABLE
+-- ============================================================
+
+CREATE TABLE alerts (
+    alert_id INT NOT NULL AUTO_INCREMENT,
+    incident_id INT NULL,
+    severity VARCHAR(20) NOT NULL,
+    area VARCHAR(50) NOT NULL,
+    root_cause VARCHAR(255) NOT NULL,
+    recommended_action VARCHAR(500) NOT NULL,
+    failed_api_endpoints TEXT,
+    slow_api_endpoints TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (alert_id),
+    INDEX idx_alert_incident_id (incident_id),
+    INDEX idx_alert_severity (severity),
+    CONSTRAINT fk_alerts_incident
+        FOREIGN KEY (incident_id)
+        REFERENCES incidents(incident_id)
+);
 
 -- ============================================================
 -- CUSTOMER TEST DATA
