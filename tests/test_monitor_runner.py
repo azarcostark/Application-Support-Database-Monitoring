@@ -41,6 +41,7 @@ def test_monitoring_cycle_healthy(monkeypatch):
     assert result["incident"]["incident"] is False
     assert result["incident"]["incident_id"] is None
     assert result["alert"] is None
+    assert result["notification_sent"] is False
 
 
 def test_monitoring_cycle_creates_incident(monkeypatch):
@@ -79,6 +80,11 @@ def test_monitoring_cycle_creates_incident(monkeypatch):
         lambda incident: 999
     )
 
+    monkeypatch.setattr(
+        "monitoring.run_monitor.save_alert",
+        lambda alert, incident_id=None: 500
+    )
+
     result = run_monitoring_cycle()
 
     assert result["health"]["overall_status"] == "CRITICAL"
@@ -87,6 +93,7 @@ def test_monitoring_cycle_creates_incident(monkeypatch):
     assert result["incident"]["area"] == "DATABASE"
     assert result["incident"]["incident_id"] == 999
     assert result["alert"] is not None
+    assert result["alert"]["alert_id"] == 500
 
 
 def test_monitoring_cycle_resolves_incidents(monkeypatch):
@@ -131,6 +138,7 @@ def test_monitoring_cycle_resolves_incidents(monkeypatch):
     assert result["incident"]["incident"] is False
     assert result["incident"]["incident_id"] is None
     assert result["alert"] is None
+    assert result["notification_sent"] is False
 
 
 def test_monitoring_cycle_creates_alert_for_database_failure(
@@ -171,11 +179,17 @@ def test_monitoring_cycle_creates_alert_for_database_failure(
         lambda incident: 1001
     )
 
+    monkeypatch.setattr(
+        "monitoring.run_monitor.save_alert",
+        lambda alert, incident_id=None: 501
+    )
+
     result = run_monitoring_cycle()
 
     alert = result["alert"]
 
     assert alert is not None
+    assert alert["alert_id"] == 501
     assert alert["severity"] == "CRITICAL"
     assert alert["area"] == "DATABASE"
     assert alert["root_cause"] == (
@@ -227,11 +241,17 @@ def test_monitoring_cycle_alert_contains_failed_endpoints(
         lambda incident: 1002
     )
 
+    monkeypatch.setattr(
+        "monitoring.run_monitor.save_alert",
+        lambda alert, incident_id=None: 502
+    )
+
     result = run_monitoring_cycle()
 
     alert = result["alert"]
 
     assert alert is not None
+    assert alert["alert_id"] == 502
     assert alert["failed_api_endpoints"] == [
         "/customers"
     ]
@@ -286,11 +306,17 @@ def test_monitoring_cycle_alert_contains_slow_endpoints(
         lambda incident: 1003
     )
 
+    monkeypatch.setattr(
+        "monitoring.run_monitor.save_alert",
+        lambda alert, incident_id=None: 503
+    )
+
     result = run_monitoring_cycle()
 
     alert = result["alert"]
 
     assert alert is not None
+    assert alert["alert_id"] == 503
     assert alert["severity"] == "WARNING"
     assert alert["slow_api_endpoints"] == ["/orders"]
 
@@ -317,6 +343,7 @@ def test_monitoring_cycle_calls_alert_manager(monkeypatch):
     }
 
     alert_calls = []
+    saved_alerts = []
 
     monkeypatch.setattr(
         "monitoring.run_monitor.run_full_health_check",
@@ -352,11 +379,26 @@ def test_monitoring_cycle_calls_alert_manager(monkeypatch):
         )
     )
 
+    monkeypatch.setattr(
+        "monitoring.run_monitor.save_alert",
+        lambda alert, incident_id=None: (
+            saved_alerts.append(
+                (alert, incident_id)
+            )
+            or 504
+        )
+    )
+
     result = run_monitoring_cycle()
 
     assert len(alert_calls) == 1
     assert alert_calls[0]["incident"] is True
     assert result["alert"] is not None
+    assert result["alert"]["alert_id"] == 504
+
+    assert len(saved_alerts) == 1
+    assert saved_alerts[0][1] == 1004
+
 
 def test_monitoring_cycle_sends_notification(monkeypatch):
 
@@ -411,6 +453,11 @@ def test_monitoring_cycle_sends_notification(monkeypatch):
     )
 
     monkeypatch.setattr(
+        "monitoring.run_monitor.save_alert",
+        lambda alert, incident_id=None: 505
+    )
+
+    monkeypatch.setattr(
         "monitoring.run_monitor.send_notification",
         lambda alert: notifications.append(alert) or True
     )
@@ -425,6 +472,7 @@ def test_monitoring_cycle_sends_notification(monkeypatch):
     assert len(notifications) == 1
     assert notifications[0]["severity"] == "CRITICAL"
     assert result["notification_sent"] is True
+    assert result["alert"]["alert_id"] == 505
 
 
 def test_monitoring_cycle_does_not_notify_when_healthy(monkeypatch):
@@ -471,6 +519,11 @@ def test_monitoring_cycle_does_not_notify_when_healthy(monkeypatch):
     )
 
     monkeypatch.setattr(
+        "monitoring.run_monitor.save_alert",
+        lambda alert, incident_id=None: 506
+    )
+
+    monkeypatch.setattr(
         "monitoring.run_monitor.send_notification",
         lambda alert: notifications.append(alert) or True
     )
@@ -484,3 +537,4 @@ def test_monitoring_cycle_does_not_notify_when_healthy(monkeypatch):
 
     assert len(notifications) == 0
     assert result["notification_sent"] is False
+    assert result["alert"] is None

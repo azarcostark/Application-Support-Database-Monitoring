@@ -8,6 +8,9 @@ def create_alert(incident_report):
 
     alert = {
         "alert_id": None,
+        "incident_id": incident_report.get(
+            "incident_id"
+        ),
         "created_at": datetime.now().isoformat(),
         "severity": incident_report["severity"],
         "area": incident_report["area"],
@@ -35,6 +38,8 @@ def format_alert(alert):
         "============================================================",
         "APPLICATION SUPPORT ALERT",
         "============================================================",
+        f"Alert ID          : {alert.get('alert_id')}",
+        f"Incident ID       : {alert.get('incident_id')}",
         f"Severity          : {alert['severity']}",
         f"Area              : {alert['area']}",
         f"Root Cause        : {alert['root_cause']}",
@@ -44,13 +49,17 @@ def format_alert(alert):
     if alert["failed_api_endpoints"]:
         lines.append(
             "Failed API Endpoints: "
-            + ", ".join(alert["failed_api_endpoints"])
+            + ", ".join(
+                alert["failed_api_endpoints"]
+            )
         )
 
     if alert["slow_api_endpoints"]:
         lines.append(
             "Slow API Endpoints: "
-            + ", ".join(alert["slow_api_endpoints"])
+            + ", ".join(
+                alert["slow_api_endpoints"]
+            )
         )
 
     lines.append(

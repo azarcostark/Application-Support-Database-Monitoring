@@ -9,6 +9,10 @@ from monitoring.incident_analyzer import (
 
 from monitoring.alert_manager import create_alert
 
+from monitoring.alert_repository import (
+    create_alert as save_alert
+)
+
 from monitoring.notification_service import (
     send_notification
 )
@@ -49,6 +53,13 @@ def run_monitoring_cycle():
     )
 
     if alert is not None:
+
+        alert_id = save_alert(
+            alert,
+            incident_id=incident_report["incident_id"]
+        )
+
+        alert["alert_id"] = alert_id
 
         notification_sent = send_notification(
             alert
