@@ -1,9 +1,15 @@
 from monitoring.health_monitor import run_full_health_check
+
 from monitoring.incident_analyzer import (
     analyze_incident,
     save_incident,
     resolve_recovered_incidents,
     print_incident_report
+)
+
+from monitoring.alert_manager import (
+    create_alert,
+    format_alert
 )
 
 
@@ -12,6 +18,7 @@ def run_monitoring_cycle():
     health_report = run_full_health_check()
 
     if health_report["overall_status"] == "HEALTHY":
+
         resolved_count = resolve_recovered_incidents(
             health_report
         )
@@ -25,6 +32,7 @@ def run_monitoring_cycle():
     )
 
     if incident_report["incident"]:
+
         incident_id = save_incident(
             incident_report
         )
@@ -32,7 +40,18 @@ def run_monitoring_cycle():
         incident_report["incident_id"] = incident_id
 
     else:
+
         incident_report["incident_id"] = None
+
+    alert = create_alert(
+        incident_report
+    )
+
+    if alert is not None:
+
+        print(
+            format_alert(alert)
+        )
 
     print_incident_report(
         incident_report
@@ -40,7 +59,8 @@ def run_monitoring_cycle():
 
     return {
         "health": health_report,
-        "incident": incident_report
+        "incident": incident_report,
+        "alert": alert
     }
 
 

@@ -13,6 +13,12 @@ from utils.incident_repository import (
     resolve_incident
 )
 
+from monitoring.alert_repository import (
+    get_all_alerts,
+    get_alert_by_id,
+    get_alerts_by_severity
+)
+
 from monitoring.incident_store import get_local_open_incidents
 from monitoring.health_monitor import run_full_health_check
 
@@ -602,6 +608,97 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to create incident"
             }), 500
+
+    # ---------------------------------------------------------
+    # ALERT APIs
+    # ---------------------------------------------------------
+
+    @app.route("/alerts", methods=["GET"])
+    def get_alerts_api():
+
+        severity = request.args.get("severity")
+
+        if severity is not None:
+            severity = severity.upper()
+
+        valid_severities = {
+            "WARNING",
+            "CRITICAL"
+        }
+
+        if (
+            severity is not None
+            and severity not in valid_severities
+        ):
+            return jsonify({
+                "status": "ERROR",
+                "message": (
+                    "Invalid alert severity. "
+                    "Use WARNING or CRITICAL."
+                )
+            }), 400
+
+        try:
+
+            if severity is None:
+                alerts = get_all_alerts()
+            else:
+                alerts = get_alerts_by_severity(
+                    severity
+                )
+
+            for alert in alerts:
+
+                if alert["created_at"] is not None:
+                    alert["created_at"] = (
+                        alert["created_at"].isoformat()
+                    )
+
+            return jsonify({
+                "count": len(alerts),
+                "alerts": alerts
+            }), 200
+
+        except Exception:
+            return jsonify({
+                "status": "ERROR",
+                "message": "Unable to retrieve alerts"
+            }), 500
+
+    @app.route(
+        "/alerts/<int:alert_id>",
+        methods=["GET"]
+    )
+    def get_alert_details(alert_id):
+
+        try:
+
+            alert = get_alert_by_id(alert_id)
+
+            if alert is None:
+                return jsonify({
+                    "status": "ERROR",
+                    "message": "Alert not found"
+                }), 404
+
+            if alert["created_at"] is not None:
+                alert["created_at"] = (
+                    alert["created_at"].isoformat()
+                )
+
+            return jsonify({
+                "alert": alert
+            }), 200
+
+        except Exception:
+            return jsonify({
+                "status": "ERROR",
+                "message": "Unable to retrieve alert"
+            }), 500
+
+    # ---------------------------------------------------------
+    # DASHBOARD API
+    # ---------------------------------------------------------
 
     @app.route("/dashboard", methods=["GET"])
     def dashboard():
