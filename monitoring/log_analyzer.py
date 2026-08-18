@@ -1,8 +1,8 @@
 import os
 import re
 
+from config.settings import API_RESPONSE_TIME_THRESHOLD
 from utils.logger import LOG_FILE
-
 
 LOG_LEVEL_PATTERN = re.compile(
     r"\|\s+(INFO|WARNING|ERROR)\s+\|"
@@ -98,7 +98,7 @@ def analyze_log_file(log_file=LOG_FILE):
 
                 summary["api_requests"].append(request_data)
 
-                if response_time >= 1.0:
+                if response_time >= API_RESPONSE_TIME_THRESHOLD:
                     summary["slow_api_requests"].append(request_data)
 
     return summary

@@ -1,6 +1,7 @@
 import time
 
 from config.database import get_database_connection
+from config.settings import DB_RESPONSE_TIME_THRESHOLD
 from utils.logger import get_logger
 
 

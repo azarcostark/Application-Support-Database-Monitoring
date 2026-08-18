@@ -2,15 +2,15 @@ import time
 
 import requests
 
+from config.settings import API_RESPONSE_TIME_THRESHOLD
 from utils.logger import get_logger
 
 
 BASE_URL = "http://127.0.0.1:5000"
 
-RESPONSE_TIME_THRESHOLD = 1.0
+RESPONSE_TIME_THRESHOLD = API_RESPONSE_TIME_THRESHOLD
 
 logger = get_logger("api_monitor")
-
 
 def check_endpoint(endpoint, expected_status=200, timeout=5):
     url = f"{BASE_URL}{endpoint}"
@@ -23,7 +23,9 @@ def check_endpoint(endpoint, expected_status=200, timeout=5):
         response_time = time.perf_counter() - start_time
 
         status_ok = response.status_code == expected_status
-        response_time_ok = response_time < RESPONSE_TIME_THRESHOLD
+        response_time_ok = (
+    response_time < API_RESPONSE_TIME_THRESHOLD
+)
 
         if status_ok and response_time_ok:
             logger.info(
@@ -39,7 +41,7 @@ def check_endpoint(endpoint, expected_status=200, timeout=5):
                 endpoint,
                 response.status_code,
                 response_time,
-                RESPONSE_TIME_THRESHOLD,
+                API_RESPONSE_TIME_THRESHOLD,
             )
 
         else:
