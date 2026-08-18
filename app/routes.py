@@ -609,12 +609,8 @@ def register_routes(app):
                 "message": "Unable to create incident"
             }), 500
 
-    # ---------------------------------------------------------
-    # ALERT APIs
-    # ---------------------------------------------------------
-
     @app.route("/alerts", methods=["GET"])
-    def get_alerts_api():
+    def get_alerts():
 
         severity = request.args.get("severity")
 
@@ -640,12 +636,12 @@ def register_routes(app):
 
         try:
 
-            if severity is None:
-                alerts = get_all_alerts()
-            else:
+            if severity is not None:
                 alerts = get_alerts_by_severity(
                     severity
                 )
+            else:
+                alerts = get_all_alerts()
 
             for alert in alerts:
 
@@ -695,10 +691,6 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to retrieve alert"
             }), 500
-
-    # ---------------------------------------------------------
-    # DASHBOARD API
-    # ---------------------------------------------------------
 
     @app.route("/dashboard", methods=["GET"])
     def dashboard():
@@ -750,6 +742,29 @@ def register_routes(app):
                         incident["resolved_at"].isoformat()
                     )
 
+            alerts = get_all_alerts()
+
+            for alert in alerts:
+
+                if alert["created_at"] is not None:
+                    alert["created_at"] = (
+                        alert["created_at"].isoformat()
+                    )
+
+                if alert["failed_api_endpoints"]:
+                    alert["failed_api_endpoints"] = (
+                        alert["failed_api_endpoints"].split(",")
+                    )
+                else:
+                    alert["failed_api_endpoints"] = []
+
+                if alert["slow_api_endpoints"]:
+                    alert["slow_api_endpoints"] = (
+                        alert["slow_api_endpoints"].split(",")
+                    )
+                else:
+                    alert["slow_api_endpoints"] = []
+
             return jsonify({
                 "system_status": health_report["overall_status"],
                 "api": {
@@ -779,7 +794,21 @@ def register_routes(app):
                     "critical": int(summary["critical"] or 0),
                     "warning": int(summary["warning"] or 0)
                 },
-                "recent_incidents": recent_incidents
+                "recent_incidents": recent_incidents,
+                "alerts": {
+                    "total": len(alerts),
+                    "critical": len([
+                        alert
+                        for alert in alerts
+                        if alert["severity"] == "CRITICAL"
+                    ]),
+                    "warning": len([
+                        alert
+                        for alert in alerts
+                        if alert["severity"] == "WARNING"
+                    ]),
+                    "recent": alerts[-5:]
+                }
             }), 200
 
         except Exception:
@@ -840,6 +869,29 @@ def register_routes(app):
                         incident["resolved_at"].isoformat()
                     )
 
+            alerts = get_all_alerts()
+
+            for alert in alerts:
+
+                if alert["created_at"] is not None:
+                    alert["created_at"] = (
+                        alert["created_at"].isoformat()
+                    )
+
+                if alert["failed_api_endpoints"]:
+                    alert["failed_api_endpoints"] = (
+                        alert["failed_api_endpoints"].split(",")
+                    )
+                else:
+                    alert["failed_api_endpoints"] = []
+
+                if alert["slow_api_endpoints"]:
+                    alert["slow_api_endpoints"] = (
+                        alert["slow_api_endpoints"].split(",")
+                    )
+                else:
+                    alert["slow_api_endpoints"] = []
+
             dashboard_data = {
                 "system_status": health_report["overall_status"],
                 "api": {
@@ -869,7 +921,21 @@ def register_routes(app):
                     "critical": int(summary["critical"] or 0),
                     "warning": int(summary["warning"] or 0)
                 },
-                "recent_incidents": recent_incidents
+                "recent_incidents": recent_incidents,
+                "alerts": {
+                    "total": len(alerts),
+                    "critical": len([
+                        alert
+                        for alert in alerts
+                        if alert["severity"] == "CRITICAL"
+                    ]),
+                    "warning": len([
+                        alert
+                        for alert in alerts
+                        if alert["severity"] == "WARNING"
+                    ]),
+                    "recent": alerts[-5:]
+                }
             }
 
             return render_template(
