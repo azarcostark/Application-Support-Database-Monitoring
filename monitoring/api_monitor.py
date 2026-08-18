@@ -2,11 +2,15 @@ import time
 
 import requests
 
-from config.settings import API_RESPONSE_TIME_THRESHOLD
+from config.settings import (
+    API_BASE_URL,
+    API_RESPONSE_TIME_THRESHOLD
+)
+
 from utils.logger import get_logger
 
 
-BASE_URL = "http://127.0.0.1:5000"
+BASE_URL = API_BASE_URL
 
 RESPONSE_TIME_THRESHOLD = API_RESPONSE_TIME_THRESHOLD
 
