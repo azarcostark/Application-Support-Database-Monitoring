@@ -5,8 +5,6 @@ from config.settings import DB_RESPONSE_TIME_THRESHOLD
 from utils.logger import get_logger
 
 
-DB_RESPONSE_TIME_THRESHOLD = 1.0
-
 logger = get_logger("db_monitor")
 
 
@@ -28,15 +26,20 @@ def check_database():
         response_time = time.perf_counter() - start_time
 
         query_ok = result is not None and result[0] == 1
-        response_time_ok = response_time < DB_RESPONSE_TIME_THRESHOLD
+
+        response_time_ok = (
+            response_time < DB_RESPONSE_TIME_THRESHOLD
+        )
 
         if query_ok and response_time_ok:
+
             logger.info(
                 "DB MONITOR PASS | query=SELECT 1 | response_time=%.4fs",
                 response_time,
             )
 
         elif query_ok and not response_time_ok:
+
             logger.warning(
                 "DB MONITOR SLOW | query=SELECT 1 | response_time=%.4fs | threshold=%.2fs",
                 response_time,
@@ -44,6 +47,7 @@ def check_database():
             )
 
         else:
+
             logger.error(
                 "DB MONITOR FAIL | query=SELECT 1 | response_time=%.4fs",
                 response_time,
@@ -57,6 +61,7 @@ def check_database():
         }
 
     except Exception as error:
+
         response_time = time.perf_counter() - start_time
 
         logger.error(
@@ -74,13 +79,19 @@ def check_database():
         }
 
     finally:
+
         if cursor is not None:
             cursor.close()
 
-        if connection is not None and connection.is_connected():
+        if (
+            connection is not None
+            and connection.is_connected()
+        ):
             connection.close()
 
 
 if __name__ == "__main__":
+
     result = check_database()
+
     print(result)
