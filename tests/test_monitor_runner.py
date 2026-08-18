@@ -357,3 +357,130 @@ def test_monitoring_cycle_calls_alert_manager(monkeypatch):
     assert len(alert_calls) == 1
     assert alert_calls[0]["incident"] is True
     assert result["alert"] is not None
+
+def test_monitoring_cycle_sends_notification(monkeypatch):
+
+    health_report = {
+        "overall_status": "CRITICAL",
+        "api": [],
+        "database": {
+            "status": "DOWN",
+            "response_time_ok": False
+        }
+    }
+
+    incident_report = {
+        "incident": True,
+        "severity": "CRITICAL",
+        "area": "DATABASE",
+        "root_cause": "Database health check failed.",
+        "recommended_action": "Check MySQL service status.",
+        "failed_api_endpoints": [],
+        "slow_api_endpoints": []
+    }
+
+    notifications = []
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.run_full_health_check",
+        lambda: health_report
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.analyze_incident",
+        lambda report: incident_report.copy()
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.save_incident",
+        lambda incident: 100
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.create_alert",
+        lambda incident: {
+            "alert_id": None,
+            "created_at": "2026-08-18T10:00:00",
+            "severity": "CRITICAL",
+            "area": "DATABASE",
+            "root_cause": "Database health check failed.",
+            "recommended_action": "Check MySQL service status.",
+            "failed_api_endpoints": [],
+            "slow_api_endpoints": []
+        }
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.send_notification",
+        lambda alert: notifications.append(alert) or True
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.print_incident_report",
+        lambda report: None
+    )
+
+    result = run_monitoring_cycle()
+
+    assert len(notifications) == 1
+    assert notifications[0]["severity"] == "CRITICAL"
+    assert result["notification_sent"] is True
+
+
+def test_monitoring_cycle_does_not_notify_when_healthy(monkeypatch):
+
+    health_report = {
+        "overall_status": "HEALTHY",
+        "api": [],
+        "database": {
+            "status": "UP",
+            "response_time_ok": True
+        }
+    }
+
+    incident_report = {
+        "incident": False,
+        "severity": "NONE",
+        "area": "NONE",
+        "root_cause": "No incident detected.",
+        "recommended_action": "No action required.",
+        "failed_api_endpoints": [],
+        "slow_api_endpoints": []
+    }
+
+    notifications = []
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.run_full_health_check",
+        lambda: health_report
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.resolve_recovered_incidents",
+        lambda report: 0
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.analyze_incident",
+        lambda report: incident_report.copy()
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.create_alert",
+        lambda incident: None
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.send_notification",
+        lambda alert: notifications.append(alert) or True
+    )
+
+    monkeypatch.setattr(
+        "monitoring.run_monitor.print_incident_report",
+        lambda report: None
+    )
+
+    result = run_monitoring_cycle()
+
+    assert len(notifications) == 0
+    assert result["notification_sent"] is False

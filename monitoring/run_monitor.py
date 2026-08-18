@@ -7,9 +7,10 @@ from monitoring.incident_analyzer import (
     print_incident_report
 )
 
-from monitoring.alert_manager import (
-    create_alert,
-    format_alert
+from monitoring.alert_manager import create_alert
+
+from monitoring.notification_service import (
+    send_notification
 )
 
 
@@ -49,9 +50,13 @@ def run_monitoring_cycle():
 
     if alert is not None:
 
-        print(
-            format_alert(alert)
+        notification_sent = send_notification(
+            alert
         )
+
+    else:
+
+        notification_sent = False
 
     print_incident_report(
         incident_report
@@ -60,7 +65,8 @@ def run_monitoring_cycle():
     return {
         "health": health_report,
         "incident": incident_report,
-        "alert": alert
+        "alert": alert,
+        "notification_sent": notification_sent
     }
 
 
