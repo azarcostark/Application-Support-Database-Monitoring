@@ -1,10 +1,13 @@
 import time
 
+from config.settings import MONITOR_INTERVAL_SECONDS
 from monitoring.run_monitor import run_monitoring_cycle
 
 
-def run_scheduler(interval_seconds=60, max_cycles=None):
-
+def run_scheduler(
+    interval_seconds=MONITOR_INTERVAL_SECONDS,
+    max_cycles=None,
+):
     if interval_seconds <= 0:
         raise ValueError("interval_seconds must be greater than 0")
 

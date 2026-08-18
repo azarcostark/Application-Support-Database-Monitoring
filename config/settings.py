@@ -26,3 +26,11 @@ DB_RESPONSE_TIME_THRESHOLD = float(
         "1.0",
     )
 )
+
+
+MONITOR_INTERVAL_SECONDS = int(
+    os.getenv(
+        "MONITOR_INTERVAL_SECONDS",
+        "60",
+    )
+)
