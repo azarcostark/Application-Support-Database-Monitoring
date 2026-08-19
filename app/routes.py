@@ -725,6 +725,33 @@ def register_routes(app):
                 "message": "Unable to retrieve alert"
             }), 500
 
+    @app.route(
+        "/alerts/history/view",
+        methods=["GET"]
+    )
+    def alert_history_view():
+
+        try:
+            alerts = get_all_alerts()
+
+            for alert in alerts:
+
+                if alert["created_at"] is not None:
+                    alert["created_at"] = (
+                        alert["created_at"].isoformat()
+                    )
+
+            return render_template(
+                "alert_history.html",
+                alerts=alerts
+            )
+
+        except Exception:
+            return jsonify({
+                "status": "ERROR",
+                "message": "Unable to load alert history"
+            }), 500
+
     @app.route("/dashboard", methods=["GET"])
     def dashboard():
 
