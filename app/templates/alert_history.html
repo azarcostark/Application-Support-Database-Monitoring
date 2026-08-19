@@ -55,6 +55,10 @@
             font-weight: bold;
         }
 
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
         .section {
             background: white;
             border-radius: 12px;
@@ -134,7 +138,7 @@
         }
 
         .empty-state {
-            padding: 30px;
+            padding: 20px;
             text-align: center;
             color: #64748b;
             background: #f8fafc;
@@ -200,58 +204,58 @@
             </h2>
 
 
-            {% if alerts %}
+            <div class="table-container">
 
-                <div class="table-container">
+                <table>
 
-                    <table>
+                    <thead>
 
-                        <thead>
+                        <tr>
 
-                            <tr>
+                            <th>
+                                Alert ID
+                            </th>
 
-                                <th>
-                                    Alert ID
-                                </th>
+                            <th>
+                                Incident ID
+                            </th>
 
-                                <th>
-                                    Incident ID
-                                </th>
+                            <th>
+                                Severity
+                            </th>
 
-                                <th>
-                                    Severity
-                                </th>
+                            <th>
+                                Area
+                            </th>
 
-                                <th>
-                                    Area
-                                </th>
+                            <th>
+                                Root Cause
+                            </th>
 
-                                <th>
-                                    Root Cause
-                                </th>
+                            <th>
+                                Recommended Action
+                            </th>
 
-                                <th>
-                                    Recommended Action
-                                </th>
+                            <th>
+                                Failed API Endpoints
+                            </th>
 
-                                <th>
-                                    Failed API Endpoints
-                                </th>
+                            <th>
+                                Slow API Endpoints
+                            </th>
 
-                                <th>
-                                    Slow API Endpoints
-                                </th>
+                            <th>
+                                Created At
+                            </th>
 
-                                <th>
-                                    Created At
-                                </th>
+                        </tr>
 
-                            </tr>
-
-                        </thead>
+                    </thead>
 
 
-                        <tbody>
+                    <tbody>
+
+                        {% if alerts %}
 
                             {% for alert in alerts %}
 
@@ -374,21 +378,26 @@
 
                             {% endfor %}
 
-                        </tbody>
+                        {% else %}
 
-                    </table>
+                            <tr>
 
-                </div>
+                                <td
+                                    colspan="9"
+                                    class="empty-state"
+                                >
+                                    No alerts found.
+                                </td>
 
-            {% else %}
+                            </tr>
 
-                <div class="empty-state">
+                        {% endif %}
 
-                    No alerts found.
+                    </tbody>
 
-                </div>
+                </table>
 
-            {% endif %}
+            </div>
 
         </div>
 
