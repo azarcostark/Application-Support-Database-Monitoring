@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Incident History</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 24px 40px;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .header p {
+            margin: 8px 0 0;
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .summary-card .number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .summary-card .label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            text-align: left;
+            padding: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .resolved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .open {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .incident-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .incident-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            padding: 30px;
+            text-align: center;
+            color: #64748b;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        @media (max-width: 700px) {
+
+            .header {
+                padding: 20px;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 10px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="header">
+
+        <h1>
+            Incident History
+        </h1>
+
+        <p>
+            Complete history of application and database incidents
+        </p>
+
+    </div>
+
+
+    <div class="container">
+
+        <a
+            href="/dashboard/view"
+            class="back-link"
+        >
+            ← Back to Dashboard
+        </a>
+
+
+        {% if incidents %}
+
+            <div class="summary">
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        {{ incidents|length }}
+                    </div>
+
+                    <div class="label">
+                        Total Incidents
+                    </div>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        {{ incidents|selectattr("status", "equalto", "OPEN")|list|length }}
+                    </div>
+
+                    <div class="label">
+                        Open Incidents
+                    </div>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <div class="number">
+                        {{ incidents|selectattr("status", "equalto", "RESOLVED")|list|length }}
+                    </div>
+
+                    <div class="label">
+                        Resolved Incidents
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="section">
+
+                <h2>
+                    All Incidents
+                </h2>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                ID
+                            </th>
+
+                            <th>
+                                Severity
+                            </th>
+
+                            <th>
+                                Area
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Root Cause
+                            </th>
+
+                            <th>
+                                Detected At
+                            </th>
+
+                            <th>
+                                Resolved At
+                            </th>
+
+                            <th>
+                                Details
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for incident in incidents %}
+
+                            <tr>
+
+                                <td>
+                                    #{{ incident.incident_id }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if incident.severity == "CRITICAL" %}
+
+                                        <span class="badge critical">
+                                            CRITICAL
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge warning">
+                                            WARNING
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ incident.area }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if incident.status == "RESOLVED" %}
+
+                                        <span class="badge resolved">
+                                            RESOLVED
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge open">
+                                            OPEN
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ incident.root_cause }}
+                                </td>
+
+
+                                <td>
+                                    {{ incident.detected_at }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if incident.resolved_at %}
+
+                                        {{ incident.resolved_at }}
+
+                                    {% else %}
+
+                                        Not resolved
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    <a
+                                        href="/incidents/{{ incident.incident_id }}/view"
+                                        class="incident-link"
+                                    >
+                                        View Details
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="section">
+
+                <div class="empty-state">
+
+                    No incident history available.
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <div class="footer">
+
+        Application Support & Database Monitoring Platform
+
+    </div>
+
+</body>
+
+</html>

@@ -459,6 +459,38 @@ def register_routes(app):
             }), 500
 
     @app.route(
+        "/incidents/history/view",
+        methods=["GET"]
+    )
+    def incident_history_view():
+
+        try:
+            incidents = get_all_incidents()
+
+            for incident in incidents:
+
+                if incident["detected_at"] is not None:
+                    incident["detected_at"] = (
+                        incident["detected_at"].isoformat()
+                    )
+
+                if incident["resolved_at"] is not None:
+                    incident["resolved_at"] = (
+                        incident["resolved_at"].isoformat()
+                    )
+
+            return render_template(
+                "incident_history.html",
+                incidents=incidents
+            )
+
+        except Exception:
+            return jsonify({
+                "status": "ERROR",
+                "message": "Unable to load incident history"
+            }), 500
+
+    @app.route(
         "/incidents/<int:incident_id>",
         methods=["GET"]
     )
