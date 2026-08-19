@@ -725,3 +725,39 @@ def register_routes(app):
                 "status": "ERROR",
                 "message": "Unable to load dashboard"
             }), 500
+
+    @app.route(
+        "/incidents/<int:incident_id>/view",
+        methods=["GET"]
+    )
+    def incident_details_view(incident_id):
+
+        try:
+            incident = get_incident_by_id(incident_id)
+
+            if incident is None:
+                return jsonify({
+                    "status": "ERROR",
+                    "message": "Incident not found"
+                }), 404
+
+            if incident["detected_at"] is not None:
+                incident["detected_at"] = (
+                    incident["detected_at"].isoformat()
+                )
+
+            if incident["resolved_at"] is not None:
+                incident["resolved_at"] = (
+                    incident["resolved_at"].isoformat()
+                )
+
+            return render_template(
+                "incident_details.html",
+                incident=incident
+            )
+
+        except Exception:
+            return jsonify({
+                "status": "ERROR",
+                "message": "Unable to load incident details"
+            }), 500

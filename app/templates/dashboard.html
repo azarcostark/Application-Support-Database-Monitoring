@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -13,6 +15,7 @@
     <title>Application Support Monitoring Dashboard</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -269,6 +272,15 @@
             font-size: 13px;
         }
 
+        .incident-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .incident-link:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 900px) {
 
             .cards {
@@ -311,7 +323,9 @@
                 align-items: flex-start;
             }
         }
+
     </style>
+
 </head>
 
 <body>
@@ -327,6 +341,7 @@
         </p>
 
     </div>
+
 
     <div class="container">
 
@@ -698,6 +713,58 @@
         </div>
 
 
+        <!-- RECENT INCIDENTS -->
+
+        <div class="section">
+
+            <h2>
+                Recent Incidents
+            </h2>
+
+            {% if dashboard.recent_incidents %}
+
+                {% for incident in dashboard.recent_incidents %}
+
+                    <div class="metric">
+
+                        <span class="metric-label">
+
+                            Incident #{{ incident.incident_id }}
+                            |
+                            {{ incident.area }}
+                            |
+                            {{ incident.severity }}
+
+                        </span>
+
+                        <span class="metric-value">
+
+                            <a
+                                href="/incidents/{{ incident.incident_id }}/view"
+                                class="incident-link"
+                            >
+                                View Details
+                            </a>
+
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    No open incidents.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
         <!-- API ENDPOINT DETAILS -->
 
         <div class="section">
@@ -958,4 +1025,5 @@
     </div>
 
 </body>
+
 </html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Incident Details</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 24px 40px;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            color: #6b7280;
+            font-weight: bold;
+        }
+
+        .value {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .critical {
+            color: #dc2626;
+        }
+
+        .warning {
+            color: #d97706;
+        }
+
+        .resolved {
+            color: #16a34a;
+        }
+
+        .open {
+            color: #d97706;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="header">
+
+        <h1>
+            Incident Details
+        </h1>
+
+    </div>
+
+    <div class="container">
+
+        <a
+            href="/dashboard/view"
+            class="back-link"
+        >
+            ← Back to Dashboard
+        </a>
+
+        <div class="section">
+
+            <div class="metric">
+
+                <span class="label">
+                    Incident ID
+                </span>
+
+                <span class="value">
+                    {{ incident.incident_id }}
+                </span>
+
+            </div>
+
+            <div class="metric">
+
+                <span class="label">
+                    Severity
+                </span>
+
+                <span
+                    class="value
+                    {% if incident.severity == 'CRITICAL' %}
+                        critical
+                    {% else %}
+                        warning
+                    {% endif %}"
+                >
+                    {{ incident.severity }}
+                </span>
+
+            </div>
+
+            <div class="metric">
+
+                <span class="label">
+                    Area
+                </span>
+
+                <span class="value">
+                    {{ incident.area }}
+                </span>
+
+            </div>
+
+            <div class="metric">
+
+                <span class="label">
+                    Status
+                </span>
+
+                <span
+                    class="value
+                    {% if incident.status == 'RESOLVED' %}
+                        resolved
+                    {% else %}
+                        open
+                    {% endif %}"
+                >
+                    {{ incident.status }}
+                </span>
+
+            </div>
+
+            <div class="metric">
+
+                <span class="label">
+                    Root Cause
+                </span>
+
+                <span class="value">
+                    {{ incident.root_cause }}
+                </span>
+
+            </div>
+
+            <div class="metric">
+
+                <span class="label">
+                    Recommended Action
+                </span>
+
+                <span class="value">
+                    {{ incident.recommended_action }}
+                </span>
+
+            </div>
+
+            <div class="metric">
+
+                <span class="label">
+                    Detected At
+                </span>
+
+                <span class="value">
+                    {{ incident.detected_at }}
+                </span>
+
+            </div>
+
+            <div class="metric">
+
+                <span class="label">
+                    Resolved At
+                </span>
+
+                <span class="value">
+                    {{ incident.resolved_at or "Not resolved" }}
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
