@@ -94,6 +94,22 @@
             font-weight: bold;
         }
 
+        .resolve-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 18px;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .resolve-button:hover {
+            background: #15803d;
+        }
+
     </style>
 
 </head>
@@ -229,9 +245,61 @@
 
             </div>
 
+
+            {% if incident.status == "OPEN" %}
+
+                <button
+                    type="button"
+                    class="resolve-button"
+                    onclick="resolveIncident()"
+                >
+                    Resolve Incident
+                </button>
+
+            {% endif %}
+
         </div>
 
     </div>
+
+
+    <script>
+
+        function resolveIncident() {
+
+            fetch(
+                "/incidents/{{ incident.incident_id }}/resolve",
+                {
+                    method: "PATCH"
+                }
+            )
+            .then(response => {
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to resolve incident"
+                    );
+
+                }
+
+                return response.json();
+
+            })
+            .then(() => {
+
+                window.location.reload();
+
+            })
+            .catch(error => {
+
+                alert(error.message);
+
+            });
+
+        }
+
+    </script>
 
 </body>
 
